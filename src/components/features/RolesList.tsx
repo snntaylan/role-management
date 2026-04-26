@@ -1,8 +1,3 @@
-/**
- * Roles List Page Component
- * Display and manage all roles
- */
-
 import React, { useState } from 'react';
 import { Button, Table, Badge, Modal, Input, Alert } from '../ui';
 import type { IRole } from '../../features/roles/rolesTypes';

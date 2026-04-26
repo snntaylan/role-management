@@ -4,3 +4,4 @@
 
 export { RolesList } from './RolesList';
 export { Dashboard } from './Dashboard';
+export { PermissionsList } from './PermissionsList';
