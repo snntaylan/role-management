@@ -101,6 +101,22 @@ const rolesSlice = createSlice({
     // Reset state
     resetRolesState: () => initialState,
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loadRoles.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loadRoles.fulfilled, (state, action: PayloadAction<{ roles: IRole[]; totalCount: number }>) => {
+        state.loading = false;
+        state.roles = action.payload.roles;
+        state.totalCount = action.payload.totalCount;
+      })
+      .addCase(loadRoles.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+  },
 });
 
 // Async thunk to load roles from API
@@ -112,29 +128,6 @@ export const loadRoles = createAsyncThunk('roles/loadRoles', async (_arg, { reje
     return rejectWithValue(err.message || 'Failed to load roles');
   }
 });
-
-// handle thunk lifecycle in extraReducers
-rolesSlice.reducer;
-
-// Extend reducer with extraReducers dynamically (createSlice already returns reducer; we attach after)
-const originalReducer = rolesSlice.reducer;
-const enhancedReducer = (state: IRolesState | undefined, action: any) => {
-  let newState = originalReducer(state as any, action);
-  switch (action.type) {
-    case loadRoles.pending.type:
-      newState = { ...(newState as IRolesState), loading: true, error: null } as IRolesState;
-      break;
-    case loadRoles.fulfilled.type:
-      newState = { ...(newState as IRolesState), loading: false, roles: action.payload.roles, totalCount: action.payload.totalCount } as IRolesState;
-      break;
-    case loadRoles.rejected.type:
-      newState = { ...(newState as IRolesState), loading: false, error: action.payload as string } as IRolesState;
-      break;
-    default:
-      break;
-  }
-  return newState;
-};
 
 export const {
   fetchRolesStart,
@@ -154,4 +147,4 @@ export const {
   clearError,
   resetRolesState,
 } = rolesSlice.actions;
-export default enhancedReducer;
+export default rolesSlice.reducer;

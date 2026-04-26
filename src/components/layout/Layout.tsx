@@ -1,7 +1,3 @@
-/**
- * Layout Component
- * Main layout wrapper with header and sidebar
- */
 
 import React, { useState } from 'react';
 import { Header } from './Header';

@@ -1,13 +1,4 @@
 /**
- * User Types for Healthcare Management System
- * 
- * Supports user model with id, name, role, permissions structure
- * as specified in healthcare portal requirements
- */
-
-import type { IPermission } from '../roles/rolesTypes';
-
-/**
  * User Role Types
  * Healthcare organization roles: Admin, Doctor, Patient
  */

@@ -1,7 +1,3 @@
-/**
- * Select Component
- * Reusable dropdown select with label and error state
- */
 
 import React from 'react';
 

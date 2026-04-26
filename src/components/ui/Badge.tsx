@@ -1,8 +1,3 @@
-/**
- * Badge Component
- * Reusable badge for status and tags
- */
-
 import React from 'react';
 
 export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info';

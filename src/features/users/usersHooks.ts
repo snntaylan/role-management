@@ -1,8 +1,3 @@
-/**
- * Users Custom Hooks
- * Simplified API for component consumption of user state and actions
- */
-
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import type { ICreateUserRequest, IUpdateUserRequest, UserRole } from './usersTypes';
 import {

@@ -1,10 +1,3 @@
-/**
- * Users Selectors
- * Memoized selectors for efficient user state queries
- * 
- * Provides optimized access to user data with reselect memoization
- */
-
 import { createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '../../app/store';
 import type { IUser } from './usersTypes';

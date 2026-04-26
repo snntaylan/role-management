@@ -15,7 +15,7 @@ function App() {
       <Router>
         <Layout>
           <Routes>
-            <Route path="/dashboard" element={<Dashboard totalRoles={8} totalPermissions={24} totalUsers={45} activeAssignments={120} />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/roles" element={<RolesPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/permissions" element={<PermissionsPage />} />

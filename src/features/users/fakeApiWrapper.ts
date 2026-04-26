@@ -3,6 +3,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import fake from './fakeApi';
 
-const fakeApi: any = fake && fake.default ? fake.default : fake;
+const fakeApi: any = fake;
 
 export default fakeApi;

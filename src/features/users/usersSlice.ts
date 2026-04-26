@@ -1,10 +1,3 @@
-/**
- * Users Redux Slice
- * Manages user state for healthcare management system
- * 
- * Handles: user CRUD operations, pagination, filtering, search
- */
-
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { IUsersState, ICreateUserRequest, IUpdateUserRequest, UserRole } from './usersTypes';

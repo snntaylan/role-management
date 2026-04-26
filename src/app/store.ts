@@ -7,8 +7,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import rolesReducer from '../features/roles/rolesSlice';
 import permissionsReducer from '../features/permissions/permissionsSlice';
 import userRoleAssignmentsReducer from '../features/userRoleAssignments/userRoleAssignmentsSlice';
-import accessControlReducer from '../features/accessControl/accessControlSlice';
-import auditLogReducer from '../features/auditLog/auditLogSlice';
 import usersReducer from '../features/users/usersSlice';
 import type { IUsersState } from '../features/users/usersTypes';
 
@@ -71,8 +69,6 @@ export const store = configureStore({
     roles: rolesReducer,
     permissions: permissionsReducer,
     userRoleAssignments: userRoleAssignmentsReducer,
-    accessControl: accessControlReducer,
-    auditLog: auditLogReducer,
     users: usersReducer,
   },
   preloadedState: loadUsersState() as any,

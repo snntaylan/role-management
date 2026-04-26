@@ -1,12 +1,4 @@
-/**
- * Users API Service
- * Mock API implementation for healthcare user management
- * 
- * Provides CRUD operations for users with mock data and simulated delays
- */
-
 import type { IUser, IUserResponse, IUserListResponse, ICreateUserRequest, IUpdateUserRequest } from './usersTypes';
-// Delegate to the local fake API implementation which persists to localStorage
 import fakeApi from './fakeApi';
 
 export const fetchUsers = async (

@@ -1,13 +1,5 @@
 import { useState, useEffect } from 'react';
-// Layout import removed (not used in this page)
-import { Table } from '../components/ui/Table';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Select } from '../components/ui/Select';
-import { Modal } from '../components/ui/Modal';
-import { Alert } from '../components/ui/Alert';
-import { Badge } from '../components/ui/Badge';
-// MultiSelect removed in favor of simple read/write checkboxes
+import { Table, Button, Input, Select, Modal, Alert, Badge } from '../components/ui/index';
 import {
   useUsers,
   useCreateUser,
@@ -23,14 +15,6 @@ import { USER_VALIDATION } from '../features/users/usersTypes';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 
-/**
- * User form state
- */
-// Form state shape is defined inline with Formik usage below
-
-/**
- * Users Management Page Component
- */
 export const UsersPage = () => {
   // Redux hooks
   const { users, loading: usersLoading, loadUsers } = useUsers();
@@ -62,13 +46,27 @@ export const UsersPage = () => {
   const { roles: rolesFromStore } = useActiveRoles();
   // Map roles to select options; fallback to static minimal roles if none available
   const mappedRoles = (rolesFromStore && rolesFromStore.length > 0)
-    ? rolesFromStore.map(r => ({ id: r.id, name: r.name, slug: (r.name || '').toLowerCase().split(' ')[0] }))
+    ? rolesFromStore.map(r => ({ id: r.id, name: r.name, slug: (r.name || '').toLowerCase().split(' ')[0], permissions: r.permissions || [] }))
     : [
-        { id: 'role_admin', name: 'Administrator', slug: 'admin' } as any,
-        { id: 'role_doctor', name: 'Doctor', slug: 'doctor' } as any,
-        { id: 'role_patient', name: 'Patient', slug: 'patient' } as any,
+        { id: 'role_admin', name: 'Admin', slug: 'admin', permissions: [] } as any,
+        { id: 'role_doctor', name: 'Doctor', slug: 'doctor', permissions: [] } as any,
+        { id: 'role_patient', name: 'Patient', slug: 'patient', permissions: [] } as any,
       ];
   const rolesOptions = mappedRoles.map((r: any) => ({ value: r.slug, label: r.name }));
+
+  // Helper to normalize role value (could be slug like 'admin' or id like 'role_admin') -> slug
+  const roleToSlug = (value: unknown) => {
+    const v = String(value || '').trim();
+    if (!v) return '';
+    // if already a slug
+    const bySlug = mappedRoles.find((r: any) => r.slug === v);
+    if (bySlug) return bySlug.slug;
+    // if it's an id, convert
+    const byId = mappedRoles.find((r: any) => r.id === v);
+    if (byId) return byId.slug;
+    // fallback: return lowercased first token
+    return v.toLowerCase().split(' ')[0];
+  };
 
   /**
    * Validate form data
@@ -81,9 +79,8 @@ export const UsersPage = () => {
       .max(USER_VALIDATION.NAME_MAX_LENGTH, `Name must not exceed ${USER_VALIDATION.NAME_MAX_LENGTH} characters`)
       .required('Name is required'),
     email: Yup.string().trim().matches(USER_VALIDATION.EMAIL_PATTERN, 'Invalid email format').required('Email is required'),
-    role: Yup.mixed().oneOf(['admin', 'doctor', 'patient']).required('Role is required'),
+  role: Yup.string().required('Role is required'),
     department: Yup.string().max(USER_VALIDATION.DEPARTMENT_MAX_LENGTH),
-    permissions: Yup.array().of(Yup.string()),
   });
 
   /**
@@ -94,7 +91,7 @@ export const UsersPage = () => {
   const [editApiError, setEditApiError] = useState<string | null>(null);
   const [deleteApiError, setDeleteApiError] = useState<string | null>(null);
 
-  const handleCreateSubmit = async (values: { name: string; email: string; role: string; department: string; permissions: string[] }, { setSubmitting, setErrors }: any) => {
+  const handleCreateSubmit = async (values: { name: string; email: string; role: string; department: string }, { setSubmitting, setErrors }: any) => {
     // Duplicate checks
     const duplicateName = users.some(u => u.name.toLowerCase() === values.name.toLowerCase());
     const duplicateEmail = users.some(u => u.email.toLowerCase() === values.email.toLowerCase());
@@ -112,7 +109,8 @@ export const UsersPage = () => {
         name: values.name.trim(),
         email: values.email.trim(),
         role: values.role as UserRole,
-        permissions: values.permissions || [],
+        // permissions are managed at the role level now
+        permissions: [],
         department: values.department?.trim() || undefined,
       };
       await createUserHandler(userData);
@@ -130,7 +128,7 @@ export const UsersPage = () => {
   /**
    * Handle edit user
    */
-  const handleEditSubmit = async (values: { name: string; email: string; role: string; department: string; permissions: string[] }, { setSubmitting, setErrors }: any) => {
+  const handleEditSubmit = async (values: { name: string; email: string; role: string; department: string }, { setSubmitting, setErrors }: any) => {
     if (!selectedUser) return;
 
     // Duplicate checks (exclude selected user)
@@ -150,7 +148,7 @@ export const UsersPage = () => {
         name: values.name.trim(),
         email: values.email.trim(),
         role: values.role as UserRole,
-        permissions: values.permissions || [],
+        // keep permissions untouched via UI; role determines effective permissions
         department: values.department?.trim() || undefined,
       };
 
@@ -331,11 +329,28 @@ export const UsersPage = () => {
                     key: 'role',
                     label: 'Role',
                     render: (value: unknown) => {
-                      const slug = String(value || '');
+                      const slug = roleToSlug(value);
                       const found = mappedRoles.find((r: any) => r.slug === slug);
                       const label = found ? found.name : String(value || '');
-                      const variant = (label === 'Administrator') ? 'danger' : (label === 'Doctor') ? 'info' : 'success';
+                      const variant = (label?.toLowerCase() === 'admin') ? 'danger' : (label === 'Doctor') ? 'info' : 'success';
                       return <Badge variant={variant as any}>{label}</Badge>;
+                    },
+                  },
+                  {
+                    key: 'permissions',
+                    label: 'Permissions',
+                    render: (_: unknown, row: any) => {
+                      const slug = roleToSlug(row.role);
+                      const found = mappedRoles.find((r: any) => r.slug === slug);
+                      const perms: string[] = found?.permissions || [];
+                      if (!perms || perms.length === 0) return <span className="text-gray-500">-</span>;
+                      return (
+                        <div className="flex flex-wrap gap-1">
+                          {perms.map((p: string) => (
+                            <Badge key={p} variant="default">{p}</Badge>
+                          ))}
+                        </div>
+                      );
                     },
                   },
                   {
@@ -421,8 +436,8 @@ export const UsersPage = () => {
           title="Add New User"
           size="md"
         >
-          <Formik<{ name: string; email: string; role: string; department: string; permissions: string[] }>
-            initialValues={{ name: '', email: '', role: 'patient', department: '', permissions: [] }}
+          <Formik<{ name: string; email: string; role: string; department: string }>
+            initialValues={{ name: '', email: '', role: 'patient', department: '' }}
             validationSchema={baseSchema}
             onSubmit={handleCreateSubmit}
           >
@@ -462,35 +477,7 @@ export const UsersPage = () => {
                       required
                     />
 
-                <div>
-                  <label className="font-medium block mb-2">Permissions</label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={values.permissions.includes('read')}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          const next = checked ? Array.from(new Set([...values.permissions, 'read'])) : values.permissions.filter((p: string) => p !== 'read');
-                          setFieldValue('permissions', next);
-                        }}
-                      />
-                      <span>Read</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={values.permissions.includes('write')}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          const next = checked ? Array.from(new Set([...values.permissions, 'write'])) : values.permissions.filter((p: string) => p !== 'write');
-                          setFieldValue('permissions', next);
-                        }}
-                      />
-                      <span>Write</span>
-                    </label>
-                  </div>
-                </div>
+                {/* permissions removed from user form; managed at role level */}
 
                 <Input
                   label="Department"
@@ -511,14 +498,13 @@ export const UsersPage = () => {
 
         {/* Edit User Modal */}
         <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title={`Edit User: ${selectedUser?.name}`} size="md">
-          <Formik<{ name: string; email: string; role: string; department: string; permissions: string[] }>
+          <Formik<{ name: string; email: string; role: string; department: string }>
             enableReinitialize
             initialValues={{
               name: selectedUser?.name || '',
               email: selectedUser?.email || '',
-              role: selectedUser?.role || 'patient',
+              role: roleToSlug(selectedUser?.role) || 'patient',
               department: selectedUser?.department || '',
-              permissions: selectedUser?.permissions || [],
             }}
             validationSchema={baseSchema}
             onSubmit={handleEditSubmit}
@@ -535,27 +521,7 @@ export const UsersPage = () => {
 
                 <Select label="Role" name="role" options={rolesOptions} value={values.role} onChange={(e) => setFieldValue('role', (e.target as HTMLSelectElement).value)} required />
 
-                <div>
-                  <label className="font-medium block mb-2">Permissions</label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" checked={values.permissions.includes('read')} onChange={(e) => {
-                        const checked = e.target.checked;
-                        const next = checked ? Array.from(new Set([...values.permissions, 'read'])) : values.permissions.filter((p: string) => p !== 'read');
-                        setFieldValue('permissions', next);
-                      }} />
-                      <span>Read</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" checked={values.permissions.includes('write')} onChange={(e) => {
-                        const checked = e.target.checked;
-                        const next = checked ? Array.from(new Set([...values.permissions, 'write'])) : values.permissions.filter((p: string) => p !== 'write');
-                        setFieldValue('permissions', next);
-                      }} />
-                      <span>Write</span>
-                    </label>
-                  </div>
-                </div>
+                {/* permissions removed from user form; managed at role level */}
 
                 <Input label="Department" name="department" placeholder="Enter department (optional)" value={values.department} onChange={handleChange} />
 

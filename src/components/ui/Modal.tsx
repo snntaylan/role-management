@@ -1,8 +1,3 @@
-/**
- * Modal Component
- * Reusable modal dialog
- */
-
 import React from 'react';
 
 interface ModalProps {
