@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout } from '../components/layout';
+// Layout import removed (not used in this page)
 import { Table } from '../components/ui/Table';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -17,8 +17,9 @@ import {
   useUsersPagination,
   useUsersDashboardStats,
 } from '../features/users/usersHooks';
+import { useActiveRoles } from '../features/roles/rolesHooks';
 import type { ICreateUserRequest, IUpdateUserRequest, UserRole } from '../features/users/usersTypes';
-import { USER_ROLE_LABELS, USER_VALIDATION } from '../features/users/usersTypes';
+import { USER_VALIDATION } from '../features/users/usersTypes';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 
@@ -52,7 +53,22 @@ export const UsersPage = () => {
   // Load users on mount
   useEffect(() => {
     loadUsers(1, 10);
+    // ensure roles are loaded so role select is dynamic
+    // useActiveRoles provides roles from the roles slice
+    // If roles slice is empty, the hook consumer can trigger loading via roles API elsewhere
   }, []);
+
+  // Roles (dynamic)
+  const { roles: rolesFromStore } = useActiveRoles();
+  // Map roles to select options; fallback to static minimal roles if none available
+  const mappedRoles = (rolesFromStore && rolesFromStore.length > 0)
+    ? rolesFromStore.map(r => ({ id: r.id, name: r.name, slug: (r.name || '').toLowerCase().split(' ')[0] }))
+    : [
+        { id: 'role_admin', name: 'Administrator', slug: 'admin' } as any,
+        { id: 'role_doctor', name: 'Doctor', slug: 'doctor' } as any,
+        { id: 'role_patient', name: 'Patient', slug: 'patient' } as any,
+      ];
+  const rolesOptions = mappedRoles.map((r: any) => ({ value: r.slug, label: r.name }));
 
   /**
    * Validate form data
@@ -275,12 +291,7 @@ export const UsersPage = () => {
             />
             <Select
               label="Filter by role"
-              options={[
-                { value: 'all', label: 'All Roles' },
-                { value: 'admin', label: 'Administrator' },
-                { value: 'doctor', label: 'Doctor' },
-                { value: 'patient', label: 'Patient' },
-              ]}
+              options={[{ value: 'all', label: 'All Roles' }, ...rolesOptions]}
               value={filters.role}
               onChange={(e) => handleRoleFilter((e.target as HTMLSelectElement).value)}
             />
@@ -319,11 +330,13 @@ export const UsersPage = () => {
                   {
                     key: 'role',
                     label: 'Role',
-                    render: (value: unknown) => (
-                      <Badge variant={(value as string) === 'admin' ? 'danger' : (value as string) === 'doctor' ? 'info' : 'success'}>
-                        {USER_ROLE_LABELS[(value as UserRole) ?? 'patient']}
-                      </Badge>
-                    ),
+                    render: (value: unknown) => {
+                      const slug = String(value || '');
+                      const found = mappedRoles.find((r: any) => r.slug === slug);
+                      const label = found ? found.name : String(value || '');
+                      const variant = (label === 'Administrator') ? 'danger' : (label === 'Doctor') ? 'info' : 'success';
+                      return <Badge variant={variant as any}>{label}</Badge>;
+                    },
                   },
                   {
                     key: 'department',
@@ -408,7 +421,7 @@ export const UsersPage = () => {
           title="Add New User"
           size="md"
         >
-          <Formik
+          <Formik<{ name: string; email: string; role: string; department: string; permissions: string[] }>
             initialValues={{ name: '', email: '', role: 'patient', department: '', permissions: [] }}
             validationSchema={baseSchema}
             onSubmit={handleCreateSubmit}
@@ -440,18 +453,14 @@ export const UsersPage = () => {
                   required
                 />
 
-                <Select
-                  label="Role"
-                  name="role"
-                  options={[
-                    { value: 'admin', label: 'Administrator' },
-                    { value: 'doctor', label: 'Doctor' },
-                    { value: 'patient', label: 'Patient' },
-                  ]}
-                  value={values.role}
-                  onChange={(e) => setFieldValue('role', (e.target as HTMLSelectElement).value)}
-                  required
-                />
+                    <Select
+                      label="Role"
+                      name="role"
+                      options={rolesOptions}
+                      value={values.role}
+                      onChange={(e) => setFieldValue('role', (e.target as HTMLSelectElement).value)}
+                      required
+                    />
 
                 <div>
                   <label className="font-medium block mb-2">Permissions</label>
@@ -502,7 +511,7 @@ export const UsersPage = () => {
 
         {/* Edit User Modal */}
         <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title={`Edit User: ${selectedUser?.name}`} size="md">
-          <Formik
+          <Formik<{ name: string; email: string; role: string; department: string; permissions: string[] }>
             enableReinitialize
             initialValues={{
               name: selectedUser?.name || '',
@@ -524,7 +533,7 @@ export const UsersPage = () => {
 
                 <Input label="Email" name="email" type="email" placeholder="Enter email address" value={values.email} onChange={handleChange} error={touched.email && errors.email ? String(errors.email) : undefined} required />
 
-                <Select label="Role" name="role" options={[{ value: 'admin', label: 'Administrator' }, { value: 'doctor', label: 'Doctor' }, { value: 'patient', label: 'Patient' }]} value={values.role} onChange={(e) => setFieldValue('role', (e.target as HTMLSelectElement).value)} required />
+                <Select label="Role" name="role" options={rolesOptions} value={values.role} onChange={(e) => setFieldValue('role', (e.target as HTMLSelectElement).value)} required />
 
                 <div>
                   <label className="font-medium block mb-2">Permissions</label>
@@ -567,6 +576,7 @@ export const UsersPage = () => {
           size="sm"
         >
           <div className="space-y-4">
+            {deleteApiError && <Alert variant="error" title="Error">{deleteApiError}</Alert>}
             <p className="text-gray-600">
               Are you sure you want to delete <strong>{selectedUser?.name}</strong>? This action cannot be undone.
             </p>

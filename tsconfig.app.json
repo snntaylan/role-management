@@ -21,5 +21,14 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": [
+    "src/app/store.ts",
+  "src/features/users/**/*.ts",
+  "src/features/users/**/*.tsx",
+  "src/components/**/*.ts",
+  "src/components/**/*.tsx",
+    "src/pages/UsersPage.tsx",
+    "src/App.tsx",
+    "src/main.tsx"
+  ]
 }

@@ -7,7 +7,7 @@
 
 import type { IUser, IUserResponse, IUserListResponse, ICreateUserRequest, IUpdateUserRequest } from './usersTypes';
 // Delegate to the local fake API implementation which persists to localStorage
-import fakeApi from './fakeApiWrapper';
+import fakeApi from './fakeApi';
 
 export const fetchUsers = async (
   page: number = 1,
