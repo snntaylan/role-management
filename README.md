@@ -28,6 +28,7 @@ A comprehensive React application for managing user roles, permissions, and acce
 - **Forms**: Formik 2.4.1 + Yup 1.2.0
 - **UI Components**: Headless UI 2.2.10
 - **Build Tool**: Vite 8.0.10
+- **Testing**: Vitest + React Testing Library + jsdom
 - **Development**: ESLint, TypeScript compiler
 
 ## 📁 Project Structure
@@ -58,6 +59,7 @@ role-management/
 │   │   └── features/                # Feature-specific components
 │   │       ├── Dashboard.tsx
 │   │       ├── RolesList.tsx
+│   │       ├── RolesList.test.tsx   # Component tests
 │   │       └── PermissionsList.tsx
 │   │
 │   ├── features/                    # Feature modules (Redux slices)
@@ -82,11 +84,14 @@ role-management/
 │   ├── App.tsx                      # Main app component
 │   ├── main.tsx                     # App entry point
 │   ├── index.css                    # Global styles
-│   └── App.css                      # App-specific styles
+│   ├── App.css                      # App-specific styles
+│   └── test/                        # Test configuration
+│       └── setup.ts                 # Test setup and global configuration
 │
 ├── public/                          # Static assets
 ├── package.json                     # Dependencies & scripts
 ├── vite.config.ts                   # Vite configuration
+├── vitest.config.ts                 # Vitest configuration
 ├── tsconfig.json                    # TypeScript configuration
 ├── tailwind.config.js               # Tailwind configuration
 └── eslint.config.js                 # ESLint configuration
@@ -135,7 +140,26 @@ npm run dev          # Start development server
 npm run build        # Build for production
 npm run preview      # Preview production build
 npm run lint         # Run ESLint
+npx vitest run       # Run tests once
+npx vitest           # Run tests in watch mode
+npx vitest --ui      # Run tests with UI
 ```
+
+## 🧪 Testing
+
+The project includes comprehensive tests using **React Testing Library** and **Vitest**:
+
+- **9 test cases** covering RolesList component functionality
+- **Unit tests** for component rendering, user interactions, and state management
+- **Mock implementations** for UI components and external dependencies
+- **Test coverage** for loading states, error handling, and form validation
+
+### Test Features
+- Component rendering with different props
+- User interaction testing (clicks, form submissions)
+- Async operation testing
+- Error boundary and validation testing
+- Accessibility testing with proper ARIA roles
 
 ## 🏗️ Architecture
 
@@ -273,9 +297,4 @@ The build artifacts will be stored in the `dist/` directory.
 
 This project is for demonstration purposes.
 
-## 👥 Acknowledgments
 
-- React team for the amazing framework
-- Redux Toolkit for simplified state management
-- Tailwind CSS for utility-first styling
-- The open source community

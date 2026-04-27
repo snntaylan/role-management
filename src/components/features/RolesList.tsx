@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button, Table, Badge, Modal, Input, Alert } from '../ui';
 import type { IRole } from '../../features/roles/rolesTypes';
 
@@ -11,7 +11,7 @@ interface RolesListProps {
   onSelectRole?: (roleId: string) => void;
 }
 
-export const RolesList: React.FC<RolesListProps> = ({
+export const RolesList: React.FC<RolesListProps> = React.memo(({
   roles,
   loading,
   error,
@@ -24,7 +24,7 @@ export const RolesList: React.FC<RolesListProps> = ({
   const [isAddingRole, setIsAddingRole] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const handleAddRole = async () => {
+  const handleAddRole = useCallback(async () => {
     if (!newRole.name.trim()) {
       setLocalError('Role name is required');
       return;
@@ -41,7 +41,7 @@ export const RolesList: React.FC<RolesListProps> = ({
     } finally {
       setIsAddingRole(false);
     }
-  };
+  }, [newRole, onAddRole]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -153,4 +153,6 @@ export const RolesList: React.FC<RolesListProps> = ({
       </Modal>
     </div>
   );
-};
+});
+
+RolesList.displayName = 'RolesList';
