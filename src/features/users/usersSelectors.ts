@@ -130,6 +130,34 @@ export const selectFilteredBySearch = createSelector(
 );
 
 /**
+ * Get users after applying all filters: search, role, active status, department
+ */
+export const selectFilteredUsers = createSelector(
+  [selectAllUsers, selectFilters],
+  (users, filters) => {
+    let out = users;
+    // search
+    if (filters.search && filters.search.trim()) {
+      const q = filters.search.toLowerCase();
+      out = out.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    }
+    // role
+    if (filters.role && filters.role !== 'all') {
+      out = out.filter(u => u.role === filters.role);
+    }
+    // active
+    if (filters.isActive !== undefined && filters.isActive !== 'all') {
+      out = out.filter(u => u.isActive === filters.isActive);
+    }
+    // department
+    if (filters.department) {
+      out = out.filter(u => (u.department || '').toLowerCase() === (filters.department || '').toLowerCase());
+    }
+    return out;
+  }
+);
+
+/**
  * Get users by role
  */
 export const selectUsersByRole = (role: string) =>
@@ -178,7 +206,7 @@ export const selectUsersDashboardStats = createSelector(
  * Get users for current page
  */
 export const selectCurrentPageUsers = createSelector(
-  [selectAllUsers, selectCurrentPage, selectPageSize],
+  [selectFilteredUsers, selectCurrentPage, selectPageSize],
   (users, page, pageSize) => {
     const startIdx = (page - 1) * pageSize;
     const endIdx = startIdx + pageSize;
