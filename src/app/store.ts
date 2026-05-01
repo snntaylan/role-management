@@ -9,6 +9,7 @@ import permissionsReducer from '../features/permissions/permissionsSlice';
 import userRoleAssignmentsReducer from '../features/userRoleAssignments/userRoleAssignmentsSlice';
 import usersReducer from '../features/users/usersSlice';
 import type { IUsersState } from '../features/users/usersTypes';
+import type { IRolesState, IPermissionsState, IUserRoleAssignmentsState } from '../features/roles/rolesTypes';
 
 const USERS_STORAGE_KEY = 'role_management_users_state_v1';
 const FAKEAPI_USERS_KEY = 'role_management_users';
@@ -64,7 +65,12 @@ const loadUsersState = (): Partial<{ users: IUsersState }> => {
   }
 };
 
-export const store = configureStore({
+export const store = configureStore<{
+  roles: IRolesState;
+  permissions: IPermissionsState;
+  userRoleAssignments: IUserRoleAssignmentsState;
+  users: IUsersState;
+}>({
   reducer: {
     roles: rolesReducer,
     permissions: permissionsReducer,

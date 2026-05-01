@@ -21,7 +21,7 @@ interface TableProps<T> {
   onRowClick?: (row: T) => void;
 }
 
-export const Table = React.forwardRef<HTMLTableElement, TableProps<Record<string, unknown>>>(
+export const Table = React.memo(React.forwardRef<HTMLTableElement, TableProps<Record<string, unknown>>>(
   (
     {
       columns,
@@ -78,7 +78,7 @@ export const Table = React.forwardRef<HTMLTableElement, TableProps<Record<string
         </table>
       </div>
     );
-  }
+  })
 );
 
 Table.displayName = 'Table';

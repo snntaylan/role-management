@@ -79,18 +79,6 @@ export const selectCurrentPage = createSelector([selectUsersState], (state) => s
 export const selectPageSize = createSelector([selectUsersState], (state) => state.pageSize);
 
 /**
- * Get total users count
- */
-export const selectTotalUsers = createSelector([selectUsersState], (state) => state.total);
-
-/**
- * Get number of pages
- */
-export const selectNumberOfPages = createSelector([selectTotalUsers, selectPageSize], (total, pageSize) =>
-  Math.ceil(total / pageSize)
-);
-
-/**
  * Get filters
  */
 export const selectFilters = createSelector([selectUsersState], (state) => state.filters);
@@ -203,16 +191,68 @@ export const selectUsersDashboardStats = createSelector(
 );
 
 /**
+ * Get filtered users (combines all filters)
+ */
+export const selectFilteredUsers = createSelector(
+  [selectAllUsers, selectFilters],
+  (users, filters) => {
+    let filtered = users;
+
+    // Apply search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        u => u.name.toLowerCase().includes(searchLower) || u.email.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply role filter
+    if (filters.role !== 'all') {
+      filtered = filtered.filter(u => u.role === filters.role);
+    }
+
+    // Apply active status filter
+    if (filters.isActive !== 'all') {
+      filtered = filtered.filter(u => u.isActive === filters.isActive);
+    }
+
+    // Apply department filter
+    if (filters.department) {
+      filtered = filtered.filter(u => u.department === filters.department);
+    }
+
+    return filtered;
+  }
+);
+
+/**
+ * Get total filtered users count
+ */
+export const selectFilteredUsersCount = createSelector([selectFilteredUsers], (users) => users.length);
+
+/**
  * Get users for current page
  */
 export const selectCurrentPageUsers = createSelector(
   [selectFilteredUsers, selectCurrentPage, selectPageSize],
-  (users, page, pageSize) => {
+  (filteredUsers, page, pageSize) => {
     const startIdx = (page - 1) * pageSize;
     const endIdx = startIdx + pageSize;
-    return users.slice(startIdx, endIdx);
+    return filteredUsers.slice(startIdx, endIdx);
   }
 );
+
+/**
+ * Get number of pages
+ */
+export const selectNumberOfPages = createSelector([selectFilteredUsersCount, selectPageSize], (total, pageSize) =>
+  Math.ceil(total / pageSize)
+);
+
+/**
+ * Get total users count
+ */
+export const selectTotalUsers = createSelector([selectFilteredUsersCount], (count) => count);
 
 /**
  * Get users sorted by name
